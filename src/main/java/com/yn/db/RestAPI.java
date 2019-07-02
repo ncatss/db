@@ -3,6 +3,7 @@ package com.yn.db;
 import com.yn.db.core.*;
 import static spark.Spark.*;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.sql.Date;
 
 public class RestAPI {
@@ -132,51 +133,52 @@ public class RestAPI {
             });
 
             path("/trades", () -> {
+				Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd").create();
                 post("", (request, response) -> {
                     response.type("application/json");
         
-                    Trade trade = new Gson().fromJson(request.body(), Trade.class);
+                    Trade trade = gson.fromJson(request.body(), Trade.class);
                     tradeService.addTrade(trade);
         
-                    return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(tradeService.getTrades())));
+                    return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, gson.toJsonTree(tradeService.getTrades())));
                 });
                 get("", (request, response) -> {
                     response.type("application/json");
                     if (request.queryParams("con") != null)
-                        return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(tradeService.getTradesByContract(request.queryParams("con")))));
+                        return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, gson.toJsonTree(tradeService.getTradesByContract(request.queryParams("con")))));
                     if (request.queryParams("acct") != null)
-                        return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(tradeService.getTradesByAcct(request.queryParams("acct")))));
+                        return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, gson.toJsonTree(tradeService.getTradesByAcct(request.queryParams("acct")))));
                     if (request.queryParams("date") != null)
-                        return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(tradeService.getTradesByDate(Date.valueOf(request.queryParams("date"))))));
-                    return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(tradeService.getTrades())));
+                        return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, gson.toJsonTree(tradeService.getTradesByDate(Date.valueOf(request.queryParams("date"))))));
+                    return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, gson.toJsonTree(tradeService.getTrades())));
                 });
                 get("/:id", (request, response) -> {
                     response.type("application/json");      
-                    return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(tradeService.getTrade(request.params(":id")))));
+                    return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, gson.toJsonTree(tradeService.getTrade(request.params(":id")))));
                 });
                 put("/:id", (request, response) -> {
                     response.type("application/json");
         
-                    Trade toEdit = new Gson().fromJson(request.body(), Trade.class);
+                    Trade toEdit = gson.fromJson(request.body(), Trade.class);
                     if (toEdit.getId() == null )
                         toEdit.setId(request.params(":id"));
                     Trade editedTrade = tradeService.editTrade(toEdit);
         
                     if (editedTrade != null) {
-                        return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJsonTree(editedTrade)));
+                        return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, gson.toJsonTree(editedTrade)));
                     } else {
-                        return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, new Gson().toJson("Trade " + request.params(":id") + " not found or error in edit")));
+                        return gson.toJson(new StandardResponse(StatusResponse.ERROR, gson.toJson("Trade " + request.params(":id") + " not found or error in edit")));
                     }
                 });
                 delete("/:id", (request, response) -> {
                     response.type("application/json");       
                     tradeService.deleteTrade(request.params(":id"));
-                    return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, "Trade "+ request.params(":id") + " deleted"));
+                    return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, "Trade "+ request.params(":id") + " deleted"));
                 });
                 options("/:id", (request, response) -> {
                     response.type("application/json");
         
-                    return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, "Trade "+ request.params(":id") + ((tradeService.tradeExist(request.params(":id"))) ? " exists" : " does not exists")));
+                    return gson.toJson(new StandardResponse(StatusResponse.SUCCESS, "Trade "+ request.params(":id") + ((tradeService.tradeExist(request.params(":id"))) ? " exists" : " does not exists")));
                 });
             });
         });
